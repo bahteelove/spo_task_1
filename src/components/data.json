@@ -1,0 +1,20 @@
+const handleSubmit = (event) => {
+    event.preventDefault();
+    const data = localStorage.getItem('data');
+    if (data) {
+        const parsedData = JSON.parse(data);
+        const doctors = parsedData.doctors;
+        const doctorExists = doctors.some(doctor => doctor.doctor_id.toString() === inputID);
+        if (doctorExists) {
+            navigate(`/doctor/doctorin/${doctorId}`);
+        } else {
+            setError('Doctor ID not found. Please enter a valid ID.');
+        }
+    } else {
+        setError('Data not found. Please contact your administrator.');
+    }
+};
+
+const navigate = useNavigate();
+    const [doctorId, setDoctorId] = useState('');
+    const [error, setError] = useState('');

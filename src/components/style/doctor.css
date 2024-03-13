@@ -1,0 +1,10 @@
+input[type="text"],
+input[type="time"],
+button {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    width: 40%;
+}
