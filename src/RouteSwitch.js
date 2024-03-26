@@ -3,11 +3,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import App from "./App";
 
-import Patient from "./components/patient";
-import PatientIn from "./components/patientin";
+import Patient from "./components/patient/patient";
+import PatientIn from "./components/patient/patientin";
 
-import Doctor from "./components/doctor";
-import DoctorIn from "./components/doctorin";
+import Doctor from "./components/doctor/doctor";
+import DoctorIn from "./components/doctor/doctorin";
 
 const RouteSwitch = () => {
   return (

@@ -1,36 +1,65 @@
-import React from 'react';
-import './style/patientin.css'; // Import CSS file for styling 
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-const PatientIn = () => {
-    // State variables to store form data
+import '../style/patientBooking.css';
+
+const PatientBooking = () => {
     const [fullName, setFullName] = useState('');
     const [selectedDoctor, setSelectedDoctor] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
     const [doctorTimeSlots, setDoctorTimeSlots] = useState([]);
 
-    const dataName = "test"; // need to change to 'data'
+    const dataName = "test"; // Data name for local storage
     const { patientId } = useParams();
-
-    const data = localStorage.getItem(`${dataName}`); 
+    const data = localStorage.getItem(dataName); 
     const parsedData = JSON.parse(data);
     const doctorsData = parsedData.doctors;
     const patientsData = parsedData.patients;
+    const patient = patientsData.find(patient => patient.patient_id === parseInt(patientId));
 
-    // patient identification by given id
-    const patientName = patientsData.find(patient => patient.patient_id === parseInt(patientId));//edited
-
-    // Function to handle doctor selection
+    // doctor selection
     const handleDoctorSelect = (doctor) => {
         setSelectedDoctor(doctor.doctor_name);
         setDoctorTimeSlots(doctor.timeSlots);
     };
 
-    // Function to handle form submission
+    // submission
     const handleSubmit = () => {
-        // Update doctor's time slots with new values
+        // if the patient has already booked a time slot with the selected doctor
+        const isTimeSlotBooked = doctorTimeSlots.some(
+            timeSlot => timeSlot.status === 'taken' && parseInt(timeSlot.patient_id) === parseInt(patientId)
+        );
+        if (isTimeSlotBooked) {
+            alert('You have already booked a time slot with this doctor.');
+            return;
+        }
+
+        // checking if there si any booked time slot for any doctor adjacent to the selected time slot
+        const patientAppointments = doctorsData.flatMap(doctor => {
+            return doctor.timeSlots.filter(timeSlot => timeSlot.status === 'taken' && parseInt(timeSlot.patient_id) === parseInt(patientId));
+        });
+
+        // converting the selected time to milliseconds
+        const selectedTimeInMillis = new Date(`2024-01-01 ${selectedTime}`).getTime();
+
+        // checking if any existing appointment is within one hour of the selected time slot
+        const appointmentWithinOneHour = patientAppointments.some(appointment => {
+            // converting the booked appointment
+            const appointmentTimeInMillis = new Date(`2024-01-01 ${appointment.time}`).getTime();
+
+            // time-difference
+            const timeDifference = Math.abs(selectedTimeInMillis - appointmentTimeInMillis);
+
+            return Math.abs(timeDifference) < 3600000;
+        });
+
+        // if there is an existing appointment within one hour, prevent booking and alert the user
+        if (appointmentWithinOneHour) {
+            alert('You cannot book an appointment within one hour of an existing appointment.');
+            return;
+        }
+
+        // booking the appointment || updating data
         const updatedDoctorsData = doctorsData.map(doctor => {
             if (doctor.doctor_name === selectedDoctor) {
                 return {
@@ -40,7 +69,7 @@ const PatientIn = () => {
                             return {
                                 ...timeSlot,
                                 status: 'taken',
-                                patient_id: parseInt(patientId) // to fix patient_id
+                                patient_id: parseInt(patientId)
                             };
                         }
                         return timeSlot;
@@ -50,31 +79,26 @@ const PatientIn = () => {
             return doctor;
         });
 
-        // Save updated data to local storage
         const updatedData = {
             ...parsedData,
             doctors: updatedDoctorsData
         };
-        localStorage.setItem(`${dataName}`, JSON.stringify(updatedData));
-
-        // Clear form fields after submission
+        localStorage.setItem(dataName, JSON.stringify(updatedData));
         setSelectedDoctor('');
         setSelectedTime('');
         alert('Appointment booked successfully!');
     };
 
-    
 
     return (
-        <div className="container">
-            <h1>Welcome, {patientName.patient_name} </h1>
+        <div className="booking-container">
+            <h1>Welcome, {patient.patient_name} </h1>
             <form onSubmit={handleSubmit}>
                 <label>
                     Full Name:
-                    <input type="text" value={patientName.patient_name} onChange={(e) => setFullName(e.target.value)} />
+                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                 </label>
                 <br />
-                
                 <div className="doctor-cards">
                     <label>Choose Doctor:</label>
                     {doctorsData.map((doctor) => (
@@ -126,4 +150,4 @@ const PatientIn = () => {
     );
 }
 
-export default PatientIn;
+export default PatientBooking;
